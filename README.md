@@ -1,35 +1,74 @@
-# Raycatcher2HA
-Allows you to push rayhunter alerts to your home assistant devices
+# Rayhunter Bridge Add-on for Home Assistant OS
 
+This add-on connects an **Orbic Rayhunter** device to **Home Assistant** over USB, using `adb` port-forwarding to pull live system statistics from the Rayhunter's internal API and publish them via MQTT.
 
+It is designed to run directly on **Home Assistant OS** (I used a Raspberry Pi 4) as a supervised add-on. It requires a wired USB connection to the Rayhunter device and an MQTT broker (e.g., the official `core-mosquitto` add-on).
 
+---
 
-In the HA UI: Settings → Add-ons → Add-on Store → ••• → Repositories → add a local repository by picking the /addons folder in the file editor, then place this add-on at /addons/rayhunter-bridge/.
+## Features
 
-Open the add-on, Configure:
+- Automatic `adb` port-forwarding (`tcp:18080 → tcp:8080`) to the Rayhunter's local API.
+- Polls `/api/system-stats` for real-time warning counts.
+- Publishes state and binary sensor entities to MQTT for discovery in Home Assistant.
+- MQTT Last Will & Testament (LWT) for entity availability.
+- Optional alert debouncing, forced alerts, and auto-clear timers.
+- Runs entirely as a Home Assistant OS add-on — no host modifications required.
 
-    mqtt_host: core-mosquitto (default) or your external broker host
+---
 
-    mqtt_user/mqtt_pass: if your broker requires auth
+## Installation
 
-    leave adb_serial empty unless multiple Android devices are attached
+1. **Clone or copy this repository** into your Home Assistant OS add-ons folder: /addons/rayhunter-bridge/
 
-Start the add-on. Logs should show:
+2. In the HA UI:
+- Go to **Settings → Add-ons → Add-on Store → ••• → Repositories**.
+- Add the local path containing this repository.
 
-    “ADB server started”
+3. Open the **Rayhunter Bridge** add-on and click **Install**.
 
-    “Port-forward established”
+---
 
-    periodic lines from the bridge: hb=ok last_id=... warnings=... alert=...
+## Configuration
 
-In Home Assistant: Settings → Devices & Services → MQTT → new device Rayhunter (Orbic) with:
+| Option              | Type   | Default           | Description |
+|---------------------|--------|-------------------|-------------|
+| `mqtt_host`         | str    | `core-mosquitto`  | MQTT broker hostname/IP. |
+| `mqtt_port`         | int    | `1883`            | MQTT broker port. |
+| `mqtt_user`         | str    | *(empty)*         | MQTT username. |
+| `mqtt_pass`         | str    | *(empty)*         | MQTT password. |
+| `poll_interval`     | int    | `3`               | Seconds between API polls. |
+| `http_timeout`      | float  | `3`               | HTTP request timeout (seconds). |
+| `http_retries`      | int    | `3`               | Retries before giving up. |
+| `http_backoff_base` | float  | `0.4`             | Backoff multiplier between retries. |
+| `device_id`         | str    | `rayhunter_orbic` | Device ID for MQTT discovery. |
+| `device_name`       | str    | `Rayhunter (Orbic)` | Display name in HA. |
+| `adb_serial`        | str    | *(empty)*         | Optional, only needed if multiple Android devices are connected. |
+| `alert_on_new`      | bool   | `false`           | Publish alerts on new warning count. |
+| `force_alert_secs`  | int    | `0`               | Force alert active if last change was within this many seconds. |
+| `autoclear_secs`    | int    | `0`               | Automatically clear alert after this many seconds. |
 
-    binary_sensor.rayhunter_alert
+---
 
-    sensor.rayhunter_last_report_id
+## USB Access
 
-    sensor.rayhunter_last_warning_count
+Make sure your Rayhunter is connected via USB and **USB Debugging** is enabled. The add-on runs `adb start-server` automatically and will keep the port-forward alive.
 
-If you want to see end-to-end immediately, enable a self-test in the add-on options:
+---
 
-    force_alert_secs: 30 and optionally autoclear_secs: 15
+## Home Assistant Entities
+
+After install and configuration, you’ll see:
+- `binary_sensor.rayhunter_alert` — active when alert is triggered.
+- `sensor.rayhunter_last_report_id` — last processed report ID.
+- `sensor.rayhunter_last_warning_count` — most recent warning count.
+
+Entities are auto-discovered via MQTT.
+
+---
+
+## Development
+
+Build locally for HA OS:
+```bash
+docker build -t local/rayhunter-bridge .
