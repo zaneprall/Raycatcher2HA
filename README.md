@@ -44,7 +44,7 @@ It is designed to run directly on **Home Assistant OS** (I used a Raspberry Pi 4
 | `device_id`         | str    | `rayhunter_orbic` | Device ID for MQTT discovery. |
 | `device_name`       | str    | `Rayhunter (Orbic)` | Display name in HA. |
 | `adb_serial`        | str    | *(empty)*         | Optional, only needed if multiple Android devices are connected. |
-| `alert_on_new`      | bool   | `false`           | Publish alerts on new warning count. |
+| `alert_on_new`      | bool   | `false`           | | If enabled, the add-on will trigger binary_sensor.rayhunter_alert only when the warningCount from /api/system-stats increases compared to the last poll. Does not mean “new file” or “new report ID.”  |
 | `force_alert_secs`  | int    | `0`               | Force alert active if last change was within this many seconds. |
 | `autoclear_secs`    | int    | `0`               | Automatically clear alert after this many seconds. |
 
