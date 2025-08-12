@@ -1,0 +1,50 @@
+name: Rayhunter Bridge
+version: "1.0.0"
+slug: rayhunter-bridge
+description: ADB port-forward + Rayhunter → Home Assistant MQTT bridge
+url: https://local
+ingress: false
+arch:
+  - aarch64
+  - armv7
+  - amd64
+host_network: true
+init: false
+startup: services
+udev: true
+privileged:
+  - SYS_ADMIN
+devices:
+  - /dev/bus/usb
+map:
+  - config:rw
+options:
+  mqtt_host: "core-mosquitto"
+  mqtt_port: 1883
+  mqtt_user: ""
+  mqtt_pass: ""
+  poll_interval: 3
+  http_timeout: 3
+  http_retries: 3
+  http_backoff_base: 0.4
+  device_id: "rayhunter_orbic"
+  device_name: "Rayhunter (Orbic)"
+  adb_serial: ""          # optional; leave empty unless multiple Android devices
+  alert_on_new: false
+  force_alert_secs: 0
+  autoclear_secs: 0
+schema:
+  mqtt_host: str
+  mqtt_port: int
+  mqtt_user: str
+  mqtt_pass: str
+  poll_interval: int
+  http_timeout: float
+  http_retries: int
+  http_backoff_base: float
+  device_id: str
+  device_name: str
+  adb_serial: str
+  alert_on_new: bool
+  force_alert_secs: int
+  autoclear_secs: int
